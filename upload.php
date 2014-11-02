@@ -1,49 +1,97 @@
 <?php
 
-$qosArray = array(64, 128, 256, 512);
-$dir = "upload/";
+$segmentNumber=1;
+$videoname="";
+$videodir="";
+$videopath="";
+$fullname="";
 
-function getname($name) {
-    $dir = "upload/";
+function debug($message)
+{
+	$message = $message . "\n";
+	echo $message;
+	#$fp = fopen("logs.txt", "a") or die("Unablel to open file");
+	#fwrite($fp, $message);
+	#fclose($fp);
+}
 
-    if (!is_dir($dir)) {
-        echo "this is not a dir for " . $dir;
-        if (mkdir($dir, 0777)) {
-            echo "mkdir success!<br>";
-        } else {
-            echo "mkdir failed!<br>";
-        }
+function parseName($name)
+{
+	global $segmentNumber,$videoname;
+	preg_match("/^(.+)---(\d+).mp4$/",$name, $result);
+	$videoname = $result[1];
+	$segmentNumber = $result[2];
+}
+
+function transcode()
+{
+	global $videoname, $videopath, $segmentNumber;
+	$lowdir = "upload/$videoname/low";
+	$lowvideoname = "$lowdir/$videoname-240*160---$segmentNumber.mp4";
+	$middir = "upload/$videoname/mid";
+	$midvideoname = "$middir/$videoname-480*320---$segmentNumber.mp4";
+	$bitratelow = "200";
+	$bitratemid = "768";
+	$fps = "29.97";
+	$lowres = "240x160";
+	$midres = "480x320";
+	$asps = "44100";
+	$audiobitrate = "64";
+
+	if(!file_exists($lowdir))
+		mkdir($lowdir, 0777, true);
+	
+	if(!file_exists($middir))
+		mkdir($middir, 0777, true);
+
+	$cmd1 = "/usr/local/bin/convert.sh $videopath $bitratelow $fps $lowres $asps $audiobitrate $lowvideoname";
+	$cmd2 = "/usr/local/bin/convert.sh $videopath $bitratemid $fps $midres $asps $audiobitrate $midvideoname";
+	
+	debug("Executing $cmd1");
+	system($cmd1);
+	debug("Low transcoding for $videopath complete");
+
+	debug("Executing $cmd2");
+	system($cmd2);
+	debug("Medium transcoding for $videopath complete");
+
+}
+
+if (($_FILES["uploaded"]["size"] < 20000000))
+  {
+  if ($_FILES["uploaded"]["error"] > 0)
+    {
+	$error = "Return Code: " . $_FILES["uploaded"]["error"];
+	debug($error);
     }
+  else
+    {
+	debug("Upload: " . $_FILES["uploaded"]["name"]);
+	debug("Type: " . $_FILES["uploaded"]["type"]);
+	debug("Size: " . ($_FILES["uploaded"]["size"] / 1024) . " Kb");
+	debug("Temp file: " . $_FILES["uploaded"]["tmp_name"]);
 
-    system('chcon -R -t httpd_sys_rw_content_t ' . $dir, $retVal);
-    return $dir . $name;
-}
+	$fullname = $_FILES["uploaded"]["name"];
+	parseName($fullname);
+	$videodir = "upload/" . $videoname . "/high";
+	$videopath = "$videodir/$videoname-720*480---$segmentNumber.mp4";
 
-$uploadfile = getname($_FILES['upfile']['name']);
+	if(!file_exists($videodir))
+	{
+		mkdir($videodir, 0777, true);
+	}
 
-if (move_uploaded_file($_FILES['upfile']['tmp_name'], $uploadfile)) {
+	move_uploaded_file($_FILES["uploaded"]["tmp_name"], $videopath);      
+	debug("Stored in: $videopath");
 
-    echo "<h2><font color=#00ff00>Success!</font></h2><br><br>";
-} else {
-
-    echo "<h2><font color=#ff0000>Failed!</font></h2><br><br>";
-}
-
-echo "File Info:
-    <br><br>File Name:" . $_FILES['upfile']['name'] .
- "<br><br>Type:" . $_FILES['upfile']['type'] .
- "<br><br>Temp File Name:" . $_FILES['upfile']['tmp_name'] .
- "<br><br>Size:" . $_FILES['upfile']['size'] / 1024 . "K" .
- "<br><br>Error:" . $_FILES['upfile']['error'];
-
-//convert video quality and save
-$name = strtolower(substr($_FILES['upfile']['name'], 0, (strpos($_FILES['upfile']['name'], '.'))));
-
-if (mkdir($dir . $name, 0777)) {
-    foreach ($qosArray as $bitrate) {
-        system('/user/local/bin/convert.sh ' . $_FILES['upfile']['tmp_name'] . ' ' . $bitrate . ' 29.97 320x240 44100 64 ' . $dir . $name . "/" . $bitrate . '.m3u8');
+	transcode();
+#      }
     }
-} else {
-    echo "<br>cannot mkdir for the video.<br>";
-}
+  }
+else
+  {
+  echo "Invalid file";
+  }
+
+	exit;
 ?>
