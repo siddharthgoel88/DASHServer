@@ -42,6 +42,9 @@ function transcode()
 	$asps = "44100";
 	$audiobitrate = "64";
 
+	$lowts = "$lowdir/$videoname-240*160---$segmentNumber.ts";
+	$midts = "$middir/$videoname-480*320---$segmentNumber.ts";
+
 	if(!file_exists($lowdir))
 		mkdir($lowdir, 0777, true);
 	
@@ -50,6 +53,8 @@ function transcode()
 
 	$cmd1 = "/usr/local/bin/convert.sh $videopath $bitratelow $fps $lowres $asps $audiobitrate $lowvideoname";
 	$cmd2 = "/usr/local/bin/convert.sh $videopath $bitratemid $fps $midres $asps $audiobitrate $midvideoname";
+	$cmd3 = "/usr/local/bin/mp42ts $lowvideoname $lowts";
+	$cmd4 = "/usr/local/bin/mp42ts $midvideoname $midts";
 	
 	debug("Executing $cmd1");
 	system($cmd1);
@@ -58,6 +63,14 @@ function transcode()
 	debug("Executing $cmd2");
 	system($cmd2);
 	debug("Medium transcoding for $videopath complete");
+	
+	debug("Executing $cmd3");
+	system($cmd3);
+	debug("Created $lowts from $lowvideoname");
+	
+	debug("Executing $cmd4");
+	system($cmd4);
+	debug("Created $midts from $midvideoname");
 
 }
 
@@ -85,8 +98,11 @@ if (($_FILES["uploaded"]["size"] < 20000000))
 		mkdir($videodir, 0777, true);
 	}
 
-	move_uploaded_file($_FILES["uploaded"]["tmp_name"], $videopath);      
+	move_uploaded_file($_FILES["uploaded"]["tmp_name"], $videopath);
 	debug("Stored in: $videopath");
+
+	$tspath = "$videodir/$videoname-720*480---$segmentNumber.ts";
+	system("/usr/local/bin/mp42ts $videopath $tspath");
 
 	transcode();
 #      }
