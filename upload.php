@@ -6,13 +6,17 @@ $videodir="";
 $videopath="";
 $fullname="";
 
-function debug($message)
+if(file_exists("logs/logs.txt"))
+        $logfp = fopen("logs/logs.txt", "a");
+else
+        $logfp = fopen("logs/logs.txt", "w");
+
+function debug($msg)
 {
-	$message = $message . "\n";
-	echo $message;
-	#$fp = fopen("logs.txt", "a") or die("Unablel to open file");
-	#fwrite($fp, $message);
-	#fclose($fp);
+	global $logfp;
+	$msg = "upload.php ===> " .$msg . "\n";
+	echo $msg;
+	fwrite($logfp, $msg);
 }
 
 function parseName($name)
@@ -93,5 +97,6 @@ else
   echo "Invalid file";
   }
 
+	fclose($logfp);
 	exit;
 ?>
