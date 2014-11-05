@@ -133,6 +133,43 @@ function formatXML($oldxml)
 	return $dom->saveXML();
 }
 
+function createM3U8($mp4count)
+{
+	global $foldername,$baseurl;
+	$lowts = fopen("upload/$foldername/low/low.m3u8", "w") or die("Unable to create m3u8 file");
+	$midts = fopen("upload/$foldername/mid/mid.m3u8", "w") or die("Unable to create m3u8 file");
+	$hights = fopen("upload/$foldername/high/high.m3u8", "w") or die("Unable to create m3u8 file");
+	$rootts = fopen("upload/$foldername/root.m3u8", "w") or die("Unable to create m3u8 file");
+
+	fwrite($lowts, "#EXTM3U\n#EXT-X-TARGETDURATION:3\n");
+	fwrite($midts, "#EXTM3U\n#EXT-X-TARGETDURATION:3\n");
+	fwrite($hights, "#EXTM3U\n#EXT-X-TARGETDURATION:3\n");
+	fwrite($rootts, "#EXTM3U\n");
+	
+	for ($i=1; $i<=$mp4count; $i++)
+	{
+		fwrite($lowts, "#EXTINF:3,\n$foldername-240*160---$i.ts\n");
+		fwrite($midts, "#EXTINF:3,\n$foldername-480*320---$i.ts\n");
+		fwrite($hights, "#EXTINF:3,\n$foldername-720*480---$i.ts\n");
+	}
+
+	fwrite($lowts, "#EXT-X-ENDLIST");
+	fwrite($midts, "#EXT-X-ENDLIST");
+	fwrite($hights, "#EXT-X-ENDLIST");
+
+	fwrite($rootts, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=200000,RESOLUTION=240x160\n");
+	fwrite($rootts, "low/low.m3u8\n");
+	fwrite($rootts, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=768000,RESOLUTION=480x320\n");
+	fwrite($rootts, "mid/mid.m3u8\n");
+	fwrite($rootts, "#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3000000,RESOLUTION=720x480\n");
+	fwrite($rootts, "high/high.m3u8\n");
+
+	fclose($lowts);
+	fclose($midts);
+	fclose($hights);
+
+}
+
 $mpd = new SimpleXMLElement($basicxml);
 $baseurl = $mpd->BaseURL;
 $mp4files = glob($videopath . '*.mp4');
@@ -143,6 +180,7 @@ if($mp4files !== false)
 	$mp4count = count( $mp4files );
 	#echo "Number of files=".$mp4count;
 	addToMPD($mp4count);
+	createM3U8($mp4count);
 }
 
 #$mpdFilePath = "upload/" . $foldername . "/" . $foldername . ".mpd";
@@ -155,6 +193,8 @@ fclose($mpdfp);
 
 $mpdPath = "$foldername/$foldername.mpd";
 addToPlaylist($mpdPath);
+
+
 
 //fclose($logfp);
 ?>
