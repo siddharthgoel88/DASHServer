@@ -66,13 +66,13 @@ function addToMPD($mp4count)
 	for ($i=1; $i<=$mp4count; $i++)
 	{
 		$highChild = $high->addChild("Url");
-		$highChild->addAttribute("sourceUrl" , $foldername . "/" . $foldername . "-720*480---" . $i . ".mp4");
+		$highChild->addAttribute("sourceUrl" , $foldername . "/high/" . $foldername . "-720*480---" . $i . ".mp4");
 
 		$midChild = $mid->addChild("Url");
-		$midChild->addAttribute("sourceUrl" , $foldername . "/" . $foldername . "-480*320---" . $i . ".mp4");
+		$midChild->addAttribute("sourceUrl" , $foldername . "/mid/" . $foldername . "-480*320---" . $i . ".mp4");
 		
 		$lowChild = $low->addChild("Url");
-		$lowChild->addAttribute("sourceUrl" , $foldername . "/" . $foldername . "-240*160---" . $i . ".mp4");
+		$lowChild->addAttribute("sourceUrl" , $foldername . "/low/" . $foldername . "-240*160---" . $i . ".mp4");
 
 	}
 	echo "end";
@@ -170,6 +170,25 @@ function createM3U8($mp4count)
 
 }
 
+function createHlsPlaylist()
+{
+	global $foldername;
+	$hlsPlaylist = "upload/hlsplaylist.html";
+	$url = "<li><a href='http://pilatus.d1.comp.nus.edu.sg/~a0110280/upload/$foldername/root.m3u8'>$foldername</li>\n";
+	
+	if(file_exists($hlsPlaylist))
+	{
+		$file = fopen($hlsPlaylist, "a");
+	}
+	else
+	{
+		$file = fopen($hlsPlaylist, "w");
+	}
+
+	fwrite($file, $url);
+	fclose($file);
+}
+
 $mpd = new SimpleXMLElement($basicxml);
 $baseurl = $mpd->BaseURL;
 $mp4files = glob($videopath . '*.mp4');
@@ -193,7 +212,7 @@ fclose($mpdfp);
 
 $mpdPath = "$foldername/$foldername.mpd";
 addToPlaylist($mpdPath);
-
+createHlsPlaylist();
 
 
 //fclose($logfp);
