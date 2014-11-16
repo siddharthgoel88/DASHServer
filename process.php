@@ -78,7 +78,7 @@ function addToMPD($mp4count)
 	echo "end";
 }
 
-
+//Creation of playlist which is used by Android client
 function addToPlaylist($mpdFilePath)
 {
 	echo "123";
@@ -121,7 +121,7 @@ function addToPlaylist($mpdFilePath)
 	echo "end2";
 }
 
-
+//Beautifies the XML
 function formatXML($oldxml)
 {
 	echo "for12";
@@ -133,6 +133,7 @@ function formatXML($oldxml)
 	return $dom->saveXML();
 }
 
+//Method to create m3u8 file
 function createM3U8($mp4count)
 {
 	global $foldername,$baseurl;
@@ -170,6 +171,7 @@ function createM3U8($mp4count)
 
 }
 
+//Creates playlist in HTML format for Safari browser to play videos
 function createHlsPlaylist()
 {
 	global $foldername;

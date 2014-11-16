@@ -11,6 +11,10 @@ if(file_exists("logs/logs.txt"))
 else
         $logfp = fopen("logs/logs.txt", "w");
 
+
+/*
+Convinent method to facilitate debugging
+*/
 function debug($msg)
 {
 	global $logfp;
@@ -19,6 +23,10 @@ function debug($msg)
 	fwrite($logfp, $msg);
 }
 
+/*
+Parsing the name of the file uploaded and extract details
+from the name. 
+*/
 function parseName($name)
 {
 	global $segmentNumber,$videoname;
@@ -27,6 +35,10 @@ function parseName($name)
 	$segmentNumber = $result[2];
 }
 
+/*
+Method that transcodes the segments uploaded to 
+240*160 and 480*320 resolutions in .mp4 and .ts formats.
+*/
 function transcode()
 {
 	global $videoname, $videopath, $segmentNumber;
@@ -56,6 +68,8 @@ function transcode()
 	$cmd3 = "/usr/local/bin/mp42ts $lowvideoname $lowts";
 	$cmd4 = "/usr/local/bin/mp42ts $midvideoname $midts";
 	
+	//Execution of command for transcoding and generation of .ts format video
+
 	debug("Executing $cmd1");
 	system($cmd1);
 	debug("Low transcoding for $videopath complete");
@@ -74,6 +88,10 @@ function transcode()
 
 }
 
+
+/*
+Logic handling upload of the streamlets
+*/
 if (($_FILES["uploaded"]["size"] < 20000000))
   {
   if ($_FILES["uploaded"]["error"] > 0)
